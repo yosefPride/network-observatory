@@ -1,14 +1,24 @@
 #!/bin/bash
 
+# ───────────────────────────────────────
+# Input
+# ───────────────────────────────────────
+
 # break down the range into network and prefix
 range="$1"
 network="${range%/*}" # '%': before | '/' char | '*' everything
 prefix="${range#*/}" # '#': after | '*' everything | '/' char
 
-if [[ ! "$prefix" =~ ^[0-9]+$ ]] || (( prefix > 32 )); then
-    echo "Invalid CIDR prefix: $prefix"
-    exit 1
-fi
+# ───────────────────────────────────────
+# Validation
+# ───────────────────────────────────────
+
+validate_prefix() {
+    if [[ ! "$prefix" =~ ^[0-9]+$ ]] || (( prefix > 32 )); then
+        echo "Invalid CIDR prefix: $prefix"
+        exit 1
+    fi
+}
 
 host_bits=$((32 - prefix))
 count=$((2 ** host_bits))
@@ -28,6 +38,10 @@ validate_ip() {
     done
 }
 
+# ───────────────────────────────────────
+# IP conversion
+# ───────────────────────────────────────
+
 # convert the ip address to integers for easier manipulation
 ip_to_int() {
     read -ra octets <<< "$network" 
@@ -44,7 +58,9 @@ int_to_ip() {
     echo "$((ip >> 24 & 255)).$((ip >> 16 & 255)).$((ip >> 8 & 255)).$((ip & 255))"
 }
 
-start=$(ip_to_int "$network")
+# ───────────────────────────────────────
+# Range generation
+# ───────────────────────────────────────
 
 # generate the list of IP addresses in the range
 get_ip_range() {
@@ -56,10 +72,14 @@ get_ip_range() {
 
 # get_ip_range
 
+# ───────────────────────────────────────
+# Scanning
+# ───────────────────────────────────────
+
 scan() {
     ip_range=$(get_ip_range)
     for ip in $ip_range; do
-        if ping -c 1 "$ip"; then
+        if ping -c 1 -W 1 "$ip" > /dev/null 2>&1; then # ping the ip address once with a timeout of 1 second and suppress output
             echo "$ip is reachable"
         else
             echo "$ip is not reachable"
@@ -67,4 +87,10 @@ scan() {
     done
 }
 
+# ───────────────────────────────────────
+# Main
+# ───────────────────────────────────────
+
+validate_prefix
+start=$(ip_to_int "$network")
 scan

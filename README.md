@@ -39,7 +39,7 @@ Set up the development environment and establish the project's basic structure.
 * Regex
 * Git
 
-**Technical plan:** [01-foundation.md](docs/01-foundation.md)
+**Technical plan:** [01-foundations.md](docs/01-foundations.md)
 
 ---
 

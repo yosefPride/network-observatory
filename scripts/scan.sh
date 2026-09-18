@@ -44,7 +44,7 @@ validate_ip() {
 
 # convert the ip address to integers for easier manipulation
 ip_to_int() {
-    read -ra octets <<< "$network" 
+    IFS=. read -ra octets <<< "$network" 
     validate_ip 
     echo $((octets[0] * 256 ** 3 + octets[1] * 256 ** 2 + octets[2] * 256 + octets[3]))
 }
@@ -81,8 +81,6 @@ scan() {
     for ip in $ip_range; do
         if ping -c 1 -W 1 "$ip" > /dev/null 2>&1; then # ping the ip address once with a timeout of 1 second and suppress output
             echo "$ip is reachable"
-        else
-            echo "$ip is not reachable"
         fi
     done
 }
@@ -92,5 +90,7 @@ scan() {
 # ───────────────────────────────────────
 
 validate_prefix
+validate_ip
+
 start=$(ip_to_int "$network")
 scan
